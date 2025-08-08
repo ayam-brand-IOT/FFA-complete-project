@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  ffa-app:
+    build:
+      context: ./ffa-app
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    privileged: true  
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/video0:/dev/video0"
+      - "/dev/gpiomem:/dev/gpiomem"
+    volumes:
+      - ./ffa-app:/app
+    environment:
+      - RS485_PORT=/dev/ttyUSB0
+      - WEBCAM_DEVICE=/dev/video0
+      - FLASH_PIN=23
+      - LASER_PIN=22
+      - UI_PORT=3030
+    depends_on:
+      - ffa-server
+
+  ffa-server:
+    build:
+      context: ./ffa-server
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./ffa-server:/app
+      - ./uploads:/app/muestras
+      - ./data:/app/data
+    environment:
+      - PORT=3002
+      - DATABASE_PATH=/app/data/ffa-server.sqlite
+      - UPLOADS_PATH=/app/muestras
