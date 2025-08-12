@@ -1,0 +1,9 @@
+[submodule "user-interface"]
+	path = user-interface
+	url = https://github.com/ayam-brand-IOT/ffa-view
+[submodule "ffa-app"]
+	path = ffa-app
+	url = https://github.com/ayam-brand-IOT/ffa-controller.git
+[submodule "ffa-server"]
+	path = ffa-server
+	url = https://github.com/ayam-brand-IOT/ffa-server.git
