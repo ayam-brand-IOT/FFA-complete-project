@@ -1,0 +1,8 @@
+services:
+  ffa-app:
+    # (si tu contenedor no corre como root, fuerza root o agrega el grupo gpio abajo)
+    user: "0:0"
+    entrypoint: ["/bin/sh","-lc"]
+    command: >
+      'ln -sf /dev/gpiochip0 /dev/gpiochip4 &&
+       exec python /app/main.py'

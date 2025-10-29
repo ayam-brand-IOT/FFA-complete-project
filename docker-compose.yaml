@@ -32,6 +32,7 @@ services:
       - ./ffa-server:/app
       - ./uploads:/app/muestras
       - ./data:/app/data
+      - /app/node_modules 
     environment:
       - PORT=3002
       - DATABASE_PATH=/app/data/ffa-server.sqlite
