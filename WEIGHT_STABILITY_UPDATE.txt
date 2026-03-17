@@ -1,0 +1,155 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   ✅ ESTABILIDAD DE PESO IMPLEMENTADA - TLB_MODBUS_dev.py           ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+📋 PROBLEMA ORIGINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El sistema FFA detecta cuando el peso es inestable y NO permite realizar
+la captura. El emulador anterior generaba peso con variación constante,
+por lo que nunca se consideraba estable.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ SOLUCIÓN IMPLEMENTADA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+El emulador ahora:
+
+1️⃣  MANTIENE PESO ESTABLE POR 1.2 SEGUNDOS
+   - El peso se genera y se mantiene estable durante 1.2s
+   - Solo agrega ruido mínimo (±0.05g) durante estabilidad
+   - Después de 1.2s, genera un nuevo peso estable
+   
+2️⃣  SIMULA COMPORTAMIENTO REALISTA
+   - Variación de peso cada 1.2s (simula diferentes objetos)
+   - Ruido pequeño durante estabilidad (simula sensor real)
+   - Peso estable permite que el sistema detecte peso válido
+   
+3️⃣  MANEJO INTELIGENTE DE TARA Y ZERO
+   - Después de setTare(): peso va a ~0g y se mantiene estable
+   - Después de setZero(): genera nuevo peso estable
+   - Después de force_new_stable_weight(): nuevo peso inmediato
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️  PARÁMETROS DE ESTABILIDAD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STABILITY_DURATION = 1.2 segundos
+   └─ Tiempo que el peso se mantiene estable
+
+STABILITY_TOLERANCE = 0.05 gramos
+   └─ Variación máxima durante estabilidad (ruido del sensor)
+
+WEIGHT_VARIATION = 2.0 gramos
+   └─ Variación entre diferentes pesos estables
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 EJEMPLO DE COMPORTAMIENTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tiempo | Peso    | Estado        | Descripción
+───────┼─────────┼───────────────┼────────────────────────────────────
+0.0s   | 125.52g | ⏳ Estabilizando | Generando primer peso estable
+0.2s   | 125.48g | ⏳ Estabilizando | Manteniéndose estable (ruido mínimo)
+0.5s   | 125.51g | ⏳ Estabilizando | ...
+0.8s   | 125.49g | ⏳ Estabilizando | ...
+1.0s   | 125.50g | ⏳ Estabilizando | ...
+1.2s   | 125.52g | ✅ ESTABLE      | ¡PESO ESTABLE! Se puede capturar
+1.3s   | 127.23g | ⏳ Estabilizando | Nuevo peso generado
+1.5s   | 127.25g | ⏳ Estabilizando | Manteniéndose estable
+2.0s   | 127.21g | ⏳ Estabilizando | ...
+2.5s   | 127.24g | ✅ ESTABLE      | ¡PESO ESTABLE! Se puede capturar
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 NUEVAS FUNCIONES AUXILIARES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+get_stability_info()
+   └─ Retorna información sobre estabilidad del peso actual
+      {
+        'is_stable': True/False,
+        'time_stable': 1.25,
+        'stability_duration_required': 1.2,
+        'current_weight': 125.5,
+        'time_until_stable': 0.0
+      }
+
+force_new_stable_weight()
+   └─ Fuerza generación de nuevo peso estable
+      Útil para simular cambio de objeto en la báscula
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 TESTS IMPLEMENTADOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ test_weight_stability.py
+   - Test 1: Estabilidad de Peso (1.2s)
+   - Test 2: Estabilidad después de Tara
+   - Test 3: Forzar Nuevo Peso Estable
+   - Test 4: Información de Estabilidad
+
+Ejecutar tests:
+   $ cd ffa-app
+   $ python test_weight_stability.py
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 CAMBIOS EN EL CÓDIGO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TLB_MODBUS_dev.py:
+   ✅ Nueva variable: STABILITY_DURATION = 1.2
+   ✅ Nueva variable: STABILITY_TOLERANCE = 0.05
+   ✅ Variables de estado: _current_stable_weight, _stability_start_time
+   ✅ Modificado: _generate_weight_reading() - mantiene estabilidad
+   ✅ Modificado: setTare() - ajusta peso base después de tara
+   ✅ Modificado: setZero() - resetea estabilidad
+   ✅ Nueva: get_stability_info() - info de estabilidad actual
+   ✅ Nueva: force_new_stable_weight() - fuerza nuevo peso
+   ✅ Modificado: set_simulated_weight() - resetea estabilidad
+   ✅ Modificado: reset_offsets() - resetea estabilidad
+
+test_weight_stability.py:
+   ✅ Nuevo archivo con 4 tests completos
+   ✅ Verifica períodos de estabilidad de 1.2s+
+   ✅ Valida comportamiento después de tara
+   ✅ Prueba funciones auxiliares
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 RESULTADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ El peso se mantiene estable por 1.2+ segundos
+✅ El sistema FFA ahora puede detectar peso estable
+✅ Las capturas serán permitidas cuando el peso esté estable
+✅ Comportamiento realista del sensor emulado
+✅ Tests completos verifican funcionalidad
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 PRÓXIMOS PASOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Rebuild Docker con los cambios:
+   $ sudo docker compose build ffa-app
+
+2. Probar el sistema completo:
+   $ sudo docker compose up ffa-app
+
+3. Verificar que permite capturas cuando peso está estable
+
+4. (Opcional) Ajustar STABILITY_DURATION si se requiere más/menos tiempo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔥 ¡LISTO PARA DESARROLLO CON PESO ESTABLE! 🔥
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

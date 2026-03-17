@@ -1,0 +1,173 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   ✅ CONFIGURACIÓN COMPLETADA - DEV_MODE en Docker                   ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+📋 RESUMEN DE CAMBIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  main.py
+   ✅ Lee DEV_MODE desde variable de entorno
+   ✅ Por defecto: true (desarrollo)
+   ✅ Carga emuladores cuando DEV_MODE=true
+   ✅ Carga hardware real cuando DEV_MODE=false
+
+2️⃣  dockerfile
+   ✅ Define ENV DEV_MODE=true
+   ✅ Incluye todas las dependencias de OpenCV
+   ✅ Configurado para modo desarrollo por defecto
+
+3️⃣  docker-compose.yaml
+   ✅ Variable DEV_MODE=true en environment
+   ✅ Fácilmente modificable para cambiar modo
+   ✅ Todos los puertos y volúmenes configurados
+
+4️⃣  docker-compose.rpi5.yml
+   ✅ Override para Raspberry Pi (producción)
+   ✅ Configura DEV_MODE=false automáticamente
+   ✅ Configuración GPIO específica para RPI5
+
+5️⃣  Scripts de ayuda
+   ✅ run-docker.sh - Helper para diferentes modos
+   ✅ test_dev_mode.py - Verificar variable de entorno
+   ✅ test_tlb_modbus_dev.py - Test weight transmitter
+   ✅ test_ios_dev.py - Test GPIO emulator
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 CÓMO USAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 MODO DESARROLLO (Mac/Windows/Linux)
+   
+   Opción A - Script helper:
+   $ ./run-docker.sh dev
+   
+   Opción B - Docker compose directo:
+   $ sudo docker compose up --build
+   
+   Opción C - Variable de entorno:
+   $ DEV_MODE=true docker compose up
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏭 MODO PRODUCCIÓN (Raspberry Pi)
+   
+   Opción A - Script helper:
+   $ ./run-docker.sh prod
+   
+   Opción B - Docker compose con override:
+   $ sudo docker compose -f docker-compose.yaml \
+                         -f docker-compose.rpi5.yml up --build
+   
+   Opción C - Modificar docker-compose.yaml:
+   Cambiar línea 16: DEV_MODE=false
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 EJECUTAR TESTS
+   
+   $ ./run-docker.sh test
+   
+   O individualmente:
+   $ cd ffa-app
+   $ python test_tlb_modbus_dev.py
+   $ python test_ios_dev.py
+   $ python test_dev_mode.py
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 VER LOGS
+   
+   $ ./run-docker.sh logs
+   
+   O directo:
+   $ sudo docker compose logs -f ffa-app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 VERIFICACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Al iniciar, deberías ver:
+
+┌─ MODO DESARROLLO ─────────────────────────────────────────────────┐
+│                                                                    │
+│  🔧 Modo Desarrollo Activado - Usando emuladores                  │
+│                                                                    │
+│  🚀 TLB_MODBUS Emulator v1.0 - Development Mode                   │
+│  📝 Emulando weight transmitter sin hardware físico               │
+│  ⚖️  Peso base: 125.5g ± 2.0g                                      │
+│  🔬 Tensión base: 45.0 ± 5.0                                       │
+│                                                                    │
+│  🎮 GPIO Emulator v1.0 - Development Mode                         │
+│  🔌 Inicializando pines virtuales...                              │
+│     Laser Pin: 22                                                 │
+│     Flash Pin: 23                                                 │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+┌─ MODO PRODUCCIÓN ─────────────────────────────────────────────────┐
+│                                                                    │
+│  🏭 Modo Producción Activado - Usando hardware real               │
+│                                                                    │
+│  (Sin mensajes de emuladores)                                     │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️  CONFIGURACIÓN RÁPIDA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Para cambiar permanentemente el modo, edita:
+
+📄 docker-compose.yaml (línea 16):
+   
+   environment:
+     - DEV_MODE=true    # <-- Cambiar a 'false' para producción
+
+📄 ffa-app/dockerfile (línea 26):
+   
+   ENV DEV_MODE=true    # <-- Cambiar a 'false' para producción
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 ARCHIVOS CREADOS/MODIFICADOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ ffa-app/main.py                   - Lee DEV_MODE de env var
+✅ ffa-app/dockerfile                 - Define DEV_MODE=true
+✅ ffa-app/TLB_MODBUS_dev.py          - Emulador weight transmitter
+✅ ffa-app/IOs_dev.py                 - Emulador GPIO
+✅ ffa-app/test_tlb_modbus_dev.py     - Tests weight transmitter
+✅ ffa-app/test_ios_dev.py            - Tests GPIO
+✅ ffa-app/test_dev_mode.py           - Tests DEV_MODE variable
+✅ docker-compose.yaml                - Config con DEV_MODE
+✅ docker-compose.rpi5.yml            - Override para producción
+✅ run-docker.sh                      - Helper script
+✅ DOCKER_MODES.md                    - Documentación completa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PRÓXIMOS PASOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Ejecutar tests:
+   $ ./run-docker.sh test
+
+2. Probar en desarrollo:
+   $ ./run-docker.sh dev
+
+3. Ver logs:
+   $ ./run-docker.sh logs
+
+4. En Raspberry Pi:
+   $ ./run-docker.sh prod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔥 ¡LISTO PARA DESARROLLO Y PRODUCCIÓN! 🔥
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
