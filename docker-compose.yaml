@@ -14,7 +14,7 @@ services:
     volumes:
       - ./ffa-app:/app
     environment:
-      - DEV_MODE=true  # Cambiar a 'false' para usar hardware real
+      - DEV_MODE=false  # Cambiar a 'false' para usar hardware real
       - RS485_PORT=/dev/ttyUSB0
       - WEBCAM_DEVICE=/dev/video0
       - FLASH_PIN=23
