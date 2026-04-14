@@ -27,6 +27,7 @@ services:
     build:
       context: ./ffa-server
       dockerfile: Dockerfile
+    user: root
     ports:
       - "3002:3002"
     volumes:
