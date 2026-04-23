@@ -14,12 +14,15 @@ services:
     volumes:
       - ./ffa-app:/app
     environment:
-      - DEV_MODE=false  # Cambiar a 'false' para usar hardware real
+      - DEV_MODE=false              # Cambiar a 'false' para usar hardware real
       - RS485_PORT=/dev/ttyUSB0
       - WEBCAM_DEVICE=/dev/video0
       - FLASH_PIN=23
       - LASER_PIN=22
       - UI_PORT=3030
+      - FLASH_SETTLE_SECONDS=0.03   
+      - FLASH_FRAME_SKIP=2           
+      - FLASH_FRAME_TIMEOUT=0.35
     depends_on:
       - ffa-server
 

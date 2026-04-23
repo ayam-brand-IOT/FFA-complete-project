@@ -1,192 +1,118 @@
-# 🐳 Docker Modes - FFA Project
+# Docker Modes - FFA Project
 
-## Modos de Operación
+Esta guia describe el estado real de la ejecucion con Docker en este repo.
 
-El proyecto FFA puede correr en dos modos diferentes controlados por la variable de entorno `DEV_MODE`:
+## Servicios definidos
 
-### 🔧 Modo Desarrollo (DEV_MODE=true)
-- **Uso:** Desarrollo local en Mac/Windows/Linux sin hardware
-- **Hardware:** Emuladores virtuales
-- **Componentes:**
-  - `TLB_MODBUS_dev.py` → Weight transmitter emulado
-  - `IOs_dev.py` → GPIO/LEDs emulados
-- **Ventajas:** 
-  - No necesita Raspberry Pi
-  - No necesita weight transmitter físico
-  - Pruebas rápidas sin hardware
+`docker-compose.yaml` levanta:
 
-### 🏭 Modo Producción (DEV_MODE=false)
-- **Uso:** Raspberry Pi con hardware conectado
-- **Hardware:** Real
-- **Componentes:**
-  - `TLB_MODBUS.py` → Weight transmitter físico vía RS485
-  - `IOs.py` → GPIO reales para laser/flash
-- **Ventajas:**
-  - Operación real del sistema
-  - Mediciones precisas
-  - Control de hardware físico
+- `ffa-app` en `3030`
+- `ffa-server` en `3002`
 
----
+## Modo actual del compose versionado
 
-## 🚀 Comandos para Diferentes Entornos
+El archivo committeado hoy esta orientado a hardware real:
 
-### Desarrollo en Mac/Windows (con emuladores)
+- `ffa-app` usa `DEV_MODE=false`
+- `ffa-app` corre con `privileged: true`
+- monta dispositivos:
+  - `/dev/ttyUSB0`
+  - `/dev/video0`
+  - `/dev/gpiomem`
 
-```bash
-# Usando docker-compose.yaml (DEV_MODE=true por defecto)
-sudo docker compose up --build
+Eso significa que el compose tal como esta no es plug-and-play para una laptop sin esos dispositivos.
 
-# O solo ffa-app
-sudo docker compose up ffa-app --build
-```
+## DEV_MODE
 
-### Producción en Raspberry Pi 5 (hardware real)
+`ffa-app/hardware.py` selecciona el backend segun esta variable:
+
+| Valor | Backend | Uso esperado |
+| --- | --- | --- |
+| `true` | `TLB_MODBUS_dev.py` + `IOs_dev.py` | desarrollo y pruebas sin hardware |
+| `false` | `TLB_MODBUS.py` + `IOs.py` | operacion real con Raspberry Pi y perifericos |
+
+## Como correr en produccion o laboratorio con hardware
 
 ```bash
-# Usando ambos archivos compose
-sudo docker compose -f docker-compose.yaml -f docker-compose.rpi5.yml up --build
-
-# El rpi5.yml sobreescribe DEV_MODE=false automáticamente
+docker compose up --build
 ```
 
-### Cambiar Modo Manualmente
+Requisitos:
 
-**Opción 1: Editar docker-compose.yaml**
-```yaml
-environment:
-  - DEV_MODE=false  # Cambiar a false para hardware real
-```
+- host con acceso a los dispositivos montados
+- permisos para contenedores privilegiados
+- camara, RS485 y GPIO disponibles
 
-**Opción 2: Variable de entorno en línea de comandos**
+## Como correr en desarrollo sin hardware
+
+Antes de levantar Docker, ajusta `docker-compose.yaml`:
+
+1. cambia `DEV_MODE=false` por `DEV_MODE=true`
+2. elimina o comenta la seccion `devices` si tu host no tiene esos paths
+3. si no necesitas privilegios, elimina `privileged: true`
+
+Luego:
+
 ```bash
-# Desarrollo
-DEV_MODE=true sudo -E docker compose up
-
-# Producción
-DEV_MODE=false sudo -E docker compose up
+docker compose up --build
 ```
 
-**Opción 3: En el Dockerfile**
-```dockerfile
-ENV DEV_MODE=true  # Cambiar el valor por defecto
-```
+## Volumenes montados
 
----
+### `ffa-app`
 
-## 📋 Verificación del Modo
+- `./ffa-app:/app`
 
-Cuando arranca el contenedor, verás uno de estos mensajes:
+### `ffa-server`
 
-**Modo Desarrollo:**
-```
-🔧 Modo Desarrollo Activado - Usando emuladores
+- `./ffa-server:/app`
+- `./uploads:/app/muestras`
+- `./data:/app/data`
 
-======================================================================
-🚀 TLB_MODBUS Emulator v1.0 - Development Mode
-======================================================================
+Nota importante: aunque el compose exporta `DATABASE_PATH=/app/data/ffa-server.sqlite`, el codigo actual de `ffa-server` no usa esa variable; abre `fish_analysis.db` por ruta local dentro del contenedor.
 
-======================================================================
-🎮 GPIO Emulator v1.0 - Development Mode
-======================================================================
-```
+## Script auxiliar `run-docker.sh`
 
-**Modo Producción:**
-```
-🏭 Modo Producción Activado - Usando hardware real
-```
+El helper soporta:
 
----
+- `dev`
+- `prod`
+- `test`
+- `logs`
+- `stop`
+- `clean`
+- `rebuild`
 
-## 🛠️ Configuración por Archivo
+Pero hay una diferencia importante:
 
-### docker-compose.yaml (Desarrollo)
-```yaml
-services:
-  ffa-app:
-    environment:
-      - DEV_MODE=true  # ← Emuladores
-```
+- `run-docker.sh prod` espera `docker-compose.rpi5.yml`
+- ese archivo no esta incluido actualmente en el repo
 
-### docker-compose.rpi5.yml (Producción)
-```yaml
-services:
-  ffa-app:
-    environment:
-      - DEV_MODE=false  # ← Hardware real
-```
+Si vas a usar el script en modo `prod`, primero necesitas agregar ese override o adaptar el script.
 
----
+## Verificacion rapida
 
-## 🔍 Debugging
+### Ver logs
 
-### Ver logs en vivo:
 ```bash
-sudo docker compose logs -f ffa-app
+docker compose logs -f ffa-app
+docker compose logs -f ffa-server
 ```
 
-### Verificar variable de entorno dentro del contenedor:
+### Ver modo activo dentro del contenedor
+
 ```bash
-sudo docker compose exec ffa-app printenv DEV_MODE
+docker compose exec ffa-app printenv DEV_MODE
 ```
 
-### Entrar al contenedor:
+### Entrar al contenedor
+
 ```bash
-sudo docker compose exec ffa-app bash
+docker compose exec ffa-app bash
+docker compose exec ffa-server sh
 ```
 
----
+## Recomendacion practica
 
-## 📊 Comparación de Componentes
-
-| Componente | Desarrollo | Producción |
-|------------|-----------|------------|
-| Weight Transmitter | `TLB_MODBUS_dev.py` (simulado) | `TLB_MODBUS.py` (RS485) |
-| GPIO Laser/Flash | `IOs_dev.py` (virtual) | `IOs.py` (hardware) |
-| Modbus | Sin hardware | `/dev/ttyUSB0` |
-| GPIO Pins | Logs en consola | Pines físicos 22/23 |
-| Calibración | Simulada con logs | Hardware real |
-
----
-
-## ⚠️ Importante
-
-- **Desarrollo:** NO conectar hardware físico al correr en modo dev
-- **Producción:** Asegurarse de que el hardware esté conectado correctamente
-- **Testing:** Usar `test_tlb_modbus_dev.py` y `test_ios_dev.py` para probar emuladores
-
----
-
-## 🎯 Casos de Uso
-
-### 1. Desarrollo Local (sin RPi)
-```bash
-# docker-compose.yaml con DEV_MODE=true
-sudo docker compose up ffa-app
-```
-
-### 2. Testing en Raspberry Pi (sin sensores)
-```bash
-# Forzar modo desarrollo en RPi
-DEV_MODE=true sudo -E docker compose up
-```
-
-### 3. Producción en Raspberry Pi 5
-```bash
-# Usar configuración específica de RPi5
-sudo docker compose -f docker-compose.yaml -f docker-compose.rpi5.yml up
-```
-
-### 4. Desarrollo con un solo servicio
-```bash
-# Solo ffa-app en modo desarrollo
-sudo docker compose up ffa-app
-```
-
----
-
-## 📝 Notas
-
-- El valor por defecto es `DEV_MODE=true` para facilitar desarrollo
-- En Raspberry Pi usar siempre el `docker-compose.rpi5.yml`
-- Los emuladores generan valores aleatorios realistas para testing
-- Los logs muestran claramente qué modo está activo
+- para desarrollo de frontend o API: corre servicios manualmente fuera de Docker
+- para pruebas de integracion con hardware: usa Docker solo en el host que realmente tenga camara, RS485 y GPIO

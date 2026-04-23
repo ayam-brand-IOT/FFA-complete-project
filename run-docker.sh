@@ -65,15 +65,15 @@ run_tests() {
     cd ffa-app
     
     echo "📋 Test 1: TLB_MODBUS_dev (Weight Transmitter)"
-    python test_tlb_modbus_dev.py
+    python tests/test_tlb_modbus_dev.py
     
     echo ""
     echo "📋 Test 2: IOs_dev (GPIO)"
-    python test_ios_dev.py
+    python tests/test_ios_dev.py
     
     echo ""
     echo "📋 Test 3: DEV_MODE variable"
-    python test_dev_mode.py
+    python tests/test_dev_mode.py
     
     echo ""
     echo "✅ Todos los tests completados"
